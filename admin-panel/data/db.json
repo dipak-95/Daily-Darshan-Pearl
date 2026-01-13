@@ -1,0 +1,77 @@
+{
+  "temples": [
+    {
+      "id": "7caaa422-4dfa-436c-89f9-8cb6907ee5ac",
+      "name": "Dwarka",
+      "location": "Gujarat",
+      "image": "/uploads/dwarka-dwarkadeesh-temple-1024x797-1768133244300-744905815.jpg",
+      "activeContentTypes": [
+        "morningDarshan",
+        "eveningDarshan"
+      ],
+      "videos": {
+        "2026-01-11": {
+          "morningDarshan": "/uploads/5714372-1768135365126-495482315.jpg",
+          "eveningDarshan": "/uploads/5714372-1768135417003-691986635.jpg"
+        }
+      }
+    },
+    {
+      "id": "a911a525-792f-4949-9de0-ba64c933fcd3",
+      "name": "Somnath",
+      "location": "Gujarat",
+      "image": "/uploads/2-1768135470584-751430400.png",
+      "activeContentTypes": [
+        "morningAarti",
+        "morningDarshan"
+      ],
+      "videos": {
+        "2026-01-11": {
+          "morningAarti": "/uploads/Mobile_Game_Ad_Script_Generation-1768140886990-17310314.mp4"
+        }
+      },
+      "nameHindi": "qewrt",
+      "locationHindi": "wre",
+      "description": "wretyk",
+      "descriptionHindi": "rty"
+    },
+    {
+      "id": "89517ec7-8179-422c-828c-ddd22c8adac4",
+      "name": "Savriya Seth",
+      "description": "mong the three temples, the one at Mandfiya is designated as the main shrine, also known as Sanwaliya Ji Dham (the residence of Sanwaliya). It is a major pilgrimage site for devotees coming from Rajasthan, Madhya Pradesh, and Gujarat",
+      "location": "Rajasthan",
+      "image": "/uploads/Screenshot (9)-1768189234265-18111991.png",
+      "activeContentTypes": [
+        "morningDarshan"
+      ],
+      "videos": {
+        "2026-01-12": {
+          "morningDarshan": "/uploads/WhatsApp Image 2026-01-12 at 09.12.08-1768189374636-771396231.jpeg"
+        }
+      },
+      "nameHindi": "सांवरिया सेठ",
+      "locationHindi": "राजस्थान",
+      "descriptionHindi": "भारत का उत्तर-पश्चिमी भाग खूबसूरत मंदिरों से भरा पड़ा है। इनमें से एक प्रसिद्ध मंदिर राजस्थान में स्थित है। सांवरिया सेठ मंदिर.\n\nयह पवित्र मंदिर समर्पित है भगवान कृष्णजिन्हें यहां “सांवरिया सेठ” के रूप में पूजा जाता है – काले रंग के देवता।\n\nके रूप में भी जाना जाता है \"मेवाड़ के श्री धामयह मंदिर समृद्धि, सफलता और दैवीय कृपा की तलाश में प्रतिवर्ष लाखों तीर्थयात्रियों का स्वागत करता है।"
+    }
+  ],
+  "poonams": [
+    {
+      "startDateTime": "2026-02-01T05:52",
+      "endDateTime": "2026-02-02T03:38",
+      "description": "Poonam are selected timing ",
+      "descriptionHindi": "efwg",
+      "id": "a0128976-f34c-4809-9c98-98c536cb631e"
+    }
+  ],
+  "grahans": [
+    {
+      "startDateTime": "2026-01-25T22:02",
+      "endDateTime": "2026-01-26T22:01",
+      "affectedPlaces": "india",
+      "description": "fghjk",
+      "affectedPlacesHindi": "Bharat",
+      "descriptionHindi": "asdf",
+      "id": "0a8c4b6b-1013-4163-a6ba-8cd750293f63"
+    }
+  ]
+}

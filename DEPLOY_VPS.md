@@ -1,6 +1,6 @@
 # 🚀 Deploying to Hostinger VPS (Ubuntu)
 
-Follow these steps to deploy your Admin Panel to your VPS.
+Follow these steps to deploy your Admin Panel to your VPS
 
 ## Prerequisites on VPS
 Run these commands on your VPS (via SSH or Terminal):

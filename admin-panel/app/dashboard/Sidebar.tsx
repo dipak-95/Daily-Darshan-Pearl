@@ -11,12 +11,12 @@ const menuItems = [
     { name: 'Grahan', icon: Sun, href: '/dashboard/grahan' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onItemClick }: { onItemClick?: () => void }) {
     const pathname = usePathname();
 
     return (
         <div className="w-64 bg-cream-light border-r border-saffron/20 h-full flex flex-col">
-            <div className="p-6 border-b border-saffron/10">
+            <div className="p-6 border-b border-saffron/10 hidden md:block">
                 <h1 className="text-2xl font-bold text-saffron-dark">Daily Darshan</h1>
                 <p className="text-xs text-brown uppercase tracking-wider mt-1">Admin Panel</p>
             </div>
@@ -29,9 +29,10 @@ export default function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={onItemClick}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${isActive
-                                    ? 'bg-saffron text-white shadow-md'
-                                    : 'text-brown hover:bg-saffron/10'
+                                ? 'bg-saffron text-white shadow-md'
+                                : 'text-brown hover:bg-saffron/10'
                                 }`}
                         >
                             <Icon size={20} />
@@ -44,6 +45,7 @@ export default function Sidebar() {
             <div className="p-4 border-t border-saffron/10">
                 <Link
                     href="/login"
+                    onClick={onItemClick}
                     className="flex items-center gap-3 px-4 py-3 text-brown hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
                 >
                     <LogOut size={20} />

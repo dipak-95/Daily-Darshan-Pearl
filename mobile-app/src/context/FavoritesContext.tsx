@@ -21,10 +21,14 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         try {
             const stored = await AsyncStorage.getItem('favorites');
             if (stored) {
-                setFavorites(JSON.parse(stored));
+                const parsed = JSON.parse(stored);
+                console.log('[Favorites] Loaded:', parsed);
+                setFavorites(parsed);
+            } else {
+                console.log('[Favorites] No saved favorites found.');
             }
         } catch (e) {
-            console.error('Failed to load favorites', e);
+            console.error('[Favorites] Failed to load:', e);
         }
     };
 
@@ -35,11 +39,14 @@ export const FavoritesProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         } else {
             newFavorites = [...favorites, id];
         }
+
         setFavorites(newFavorites);
+
         try {
             await AsyncStorage.setItem('favorites', JSON.stringify(newFavorites));
+            console.log('[Favorites] Saved:', newFavorites);
         } catch (e) {
-            console.error('Failed to save favorites', e);
+            console.error('[Favorites] Failed to save:', e);
         }
     };
 

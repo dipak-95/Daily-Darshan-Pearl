@@ -1,69 +1,73 @@
 import { NextResponse } from 'next/server';
 import { readFile, readdir } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { existsSync } from 'fs';
 
 export const runtime = 'nodejs';
-
 
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ filename: string }> }
 ) {
     const { filename } = await params;
+    const cwd = process.cwd();
 
-    // Security path traversal check
-    if (filename.includes('..')) {
-        return new NextResponse('Invalid filename', { status: 400 });
+    // Define all possible locations where the file might be hiding
+    const candidates = [
+        join(cwd, 'user_uploads', filename),         // Root user_uploads
+        join(cwd, 'public', 'uploads', filename),    // Standard public/uploads
+        join(cwd, 'uploads', filename),              // Root uploads
+        join('/tmp', filename),                      // Temp dir (fallback)
+    ];
+
+    let foundPath = null;
+    let debugScan = [];
+
+    // Hunt for the file
+    for (const p of candidates) {
+        const exists = existsSync(p);
+        debugScan.push({ path: p, exists });
+        if (exists) {
+            foundPath = p;
+            break;
+        }
     }
 
-    // Look in 'user_uploads' folder in root (matches upload route)
-    const storageDir = join(process.cwd(), 'user_uploads');
-    const filePath = join(storageDir, filename);
-
-    // Try to find the file
-    if (!existsSync(filePath)) {
-        // Debugging info in 404 response
-        let folderContents: string[] = [];
-        try {
-            if (existsSync(storageDir)) {
-                folderContents = await readdir(storageDir);
-            } else {
-                folderContents = ['Directory user_uploads does not exist'];
-            }
-        } catch (e: any) {
-            folderContents = [`Error listing directory: ${e.message}`];
-        }
+    if (!foundPath) {
+        // Debugging: List contents of root to see what's actually there
+        let rootListing: string[] = [];
+        try { rootListing = await readdir(cwd); } catch (e: any) { rootListing = [e.message]; }
 
         return NextResponse.json({
-            error: 'File not found',
-            pathTried: filePath,
-            cwd: process.cwd(),
-            folderDebug: folderContents.slice(0, 50)
+            error: 'File not found in any candidate path',
+            candidates: debugScan,
+            cwd: cwd,
+            rootListing: rootListing.slice(0, 50)
         }, { status: 404 });
     }
 
     try {
-        const fileBuffer = await readFile(filePath);
+        const fileBuffer = await readFile(foundPath);
 
         // Determine content type
         const ext = filename.split('.').pop()?.toLowerCase();
         let contentType = 'application/octet-stream';
-        if (ext === 'jpg' || ext === 'jpeg') contentType = 'image/jpeg';
-        if (ext === 'png') contentType = 'image/png';
-        if (ext === 'gif') contentType = 'image/gif';
-        if (ext === 'webp') contentType = 'image/webp';
-        if (ext === 'mp4') contentType = 'video/mp4'; // Added video support
+        const types: any = {
+            'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+            'png': 'image/png', 'gif': 'image/gif',
+            'webp': 'image/webp', 'mp4': 'video/mp4'
+        };
+        if (types[ext || '']) contentType = types[ext || ''];
 
         return new NextResponse(fileBuffer, {
             headers: {
                 'Content-Type': contentType,
                 'Cache-Control': 'public, max-age=31536000, immutable',
                 'Content-Length': fileBuffer.length.toString(),
+                'Access-Control-Allow-Origin': '*', // CORS for APK
             },
         });
     } catch (error: any) {
-        console.error('Error reading file:', error);
-        return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Read Error', details: error.message }, { status: 500 });
     }
 }

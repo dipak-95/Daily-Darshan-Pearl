@@ -1,3 +1,4 @@
+```typescript
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -6,6 +7,8 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '100mb',
     },
   },
+  serverExternalPackages: ['fs', 'path'],
 };
 
 export default nextConfig;
+```

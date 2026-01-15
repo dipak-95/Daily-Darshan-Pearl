@@ -83,12 +83,39 @@ export default function TemplesPage() {
     };
 
     const uploadFile = async (file: File) => {
-        const data = new FormData();
-        data.append('file', file);
-        const res = await fetch('/api/upload', { method: 'POST', body: data });
-        const json = await res.json();
-        if (!json.success) throw new Error(json.message);
-        return json.url;
+        // Use chunked upload for files > 1MB to bypass Nginx limits
+        const CHUNK_SIZE = 500 * 1024; // 500KB chunks
+        if (file.size > 1024 * 1024) {
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            const fileId = Math.random().toString(36).substring(7) + Date.now();
+
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(file.size, start + CHUNK_SIZE);
+                const chunk = file.slice(start, end);
+
+                const fd = new FormData();
+                fd.append('chunk', chunk);
+                fd.append('index', i.toString());
+                fd.append('total', totalChunks.toString());
+                fd.append('fileId', fileId);
+                fd.append('fileName', file.name);
+
+                const res = await fetch('/api/upload/chunk', { method: 'POST', body: fd });
+                if (!res.ok) throw new Error('Chunk upload failed');
+
+                const data = await res.json();
+                if (data.completed) return data.url;
+            }
+        } else {
+            // Simple upload for small files
+            const data = new FormData();
+            data.append('file', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: data });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message);
+            return json.url;
+        }
     };
 
     const handleCoverKey = async (file: File) => {

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, createReadStream, statSync } from 'fs';
+import { tmpdir } from 'os';
+import { Readable } from 'stream';
 
 export const runtime = 'nodejs';
 
@@ -10,64 +12,79 @@ export async function GET(
     { params }: { params: Promise<{ filename: string }> }
 ) {
     const { filename } = await params;
-    const cwd = process.cwd();
 
-    // Define all possible locations where the file might be hiding
+    // Look in system temp first (most reliable), then others as fallback
+    const systemTemp = join(tmpdir(), 'spectral_uploads', filename);
     const candidates = [
-        join(cwd, 'user_uploads', filename),         // Root user_uploads
-        join(cwd, 'public', 'uploads', filename),    // Standard public/uploads
-        join(cwd, 'uploads', filename),              // Root uploads
-        join('/tmp', filename),                      // Temp dir (fallback)
+        systemTemp,
+        join(process.cwd(), 'user_uploads', filename),
+        join(process.cwd(), 'public', 'uploads', filename),
     ];
 
-    let foundPath = null;
-    let debugScan = [];
-
-    // Hunt for the file
+    let filePath: string | null = null;
     for (const p of candidates) {
-        const exists = existsSync(p);
-        debugScan.push({ path: p, exists });
-        if (exists) {
-            foundPath = p;
+        if (existsSync(p)) {
+            filePath = p;
             break;
         }
     }
 
-    if (!foundPath) {
-        // Debugging: List contents of root to see what's actually there
-        let rootListing: string[] = [];
-        try { rootListing = await readdir(cwd); } catch (e: any) { rootListing = [e.message]; }
-
-        return NextResponse.json({
-            error: 'File not found in any candidate path',
-            candidates: debugScan,
-            cwd: cwd,
-            rootListing: rootListing.slice(0, 50)
-        }, { status: 404 });
+    if (!filePath) {
+        return NextResponse.json({ error: 'File not found', searched: candidates }, { status: 404 });
     }
 
-    try {
-        const fileBuffer = await readFile(foundPath);
+    const stat = statSync(filePath);
+    const fileSize = stat.size;
+    const ext = filename.split('.').pop()?.toLowerCase();
 
-        // Determine content type
-        const ext = filename.split('.').pop()?.toLowerCase();
-        let contentType = 'application/octet-stream';
-        const types: any = {
-            'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
-            'png': 'image/png', 'gif': 'image/gif',
-            'webp': 'image/webp', 'mp4': 'video/mp4'
-        };
-        if (types[ext || '']) contentType = types[ext || ''];
+    let contentType = 'application/octet-stream';
+    const types: any = {
+        'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+        'png': 'image/png', 'gif': 'image/gif',
+        'webp': 'image/webp', 'mp4': 'video/mp4'
+    };
+    if (types[ext || '']) contentType = types[ext || ''];
 
-        return new NextResponse(fileBuffer, {
-            headers: {
-                'Content-Type': contentType,
-                'Cache-Control': 'public, max-age=31536000, immutable',
-                'Content-Length': fileBuffer.length.toString(),
-                'Access-Control-Allow-Origin': '*', // CORS for APK
-            },
-        });
-    } catch (error: any) {
-        return NextResponse.json({ error: 'Read Error', details: error.message }, { status: 500 });
+    // Handle Video Streaming (Partial Content)
+    if (contentType.startsWith('video/')) {
+        const range = request.headers.get('range');
+        if (range) {
+            const parts = range.replace(/bytes=/, "").split("-");
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            const chunksize = (end - start) + 1;
+            const fileStream = createReadStream(filePath, { start, end });
+
+            // Convert to web readable stream for Next.js
+            const stream = new ReadableStream({
+                start(controller) {
+                    fileStream.on('data', chunk => controller.enqueue(chunk));
+                    fileStream.on('end', () => controller.close());
+                    fileStream.on('error', err => controller.error(err));
+                }
+            });
+
+            return new NextResponse(stream as any, {
+                status: 206,
+                headers: {
+                    'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+                    'Accept-Ranges': 'bytes',
+                    'Content-Length': chunksize.toString(),
+                    'Content-Type': contentType,
+                    'Access-Control-Allow-Origin': '*',
+                },
+            });
+        }
     }
+
+    // Regular file serving (Images)
+    const fileBuffer = await readFile(filePath);
+    return new NextResponse(fileBuffer, {
+        headers: {
+            'Content-Type': contentType,
+            'Content-Length': fileSize.toString(),
+            'Cache-Control': 'no-store, no-cache, must-revalidate', // Prevent caching during debug
+            'Access-Control-Allow-Origin': '*',
+        },
+    });
 }

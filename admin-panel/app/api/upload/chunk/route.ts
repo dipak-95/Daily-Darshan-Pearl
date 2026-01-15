@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { appendFile, writeFile, mkdir, rename, unlink } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { tmpdir } from 'os';
 
 export const runtime = 'nodejs';
 
@@ -16,8 +17,9 @@ export async function POST(request: Request) {
 
         if (!file) return NextResponse.json({ error: 'No chunk' }, { status: 400 });
 
-        // Temp dir for chunks
-        const tempDir = join(process.cwd(), 'temp_uploads');
+        // Use system temp for stability
+        const baseDir = join(tmpdir(), 'spectral_uploads');
+        const tempDir = join(baseDir, 'temp_chunks');
         await mkdir(tempDir, { recursive: true });
 
         const tempFilePath = join(tempDir, `${fileId}.tmp`);
@@ -33,7 +35,7 @@ export async function POST(request: Request) {
 
         // If last chunk, finalize
         if (index === total - 1) {
-            const finalDir = join(process.cwd(), 'user_uploads');
+            const finalDir = baseDir; // Store in spectral_uploads
             await mkdir(finalDir, { recursive: true });
 
             const safeName = originalName.replace(/[^a-zA-Z0-9.-]/g, '_');

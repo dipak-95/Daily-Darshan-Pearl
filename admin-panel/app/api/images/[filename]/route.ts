@@ -16,6 +16,7 @@ export async function GET(
     }
 
     // Look in both standard locations to be safe
+    console.log('Serving Image Request:', filename, 'CWD:', process.cwd());
     const publicPath = join(process.cwd(), 'public/uploads', filename);
 
     // Try to find the file

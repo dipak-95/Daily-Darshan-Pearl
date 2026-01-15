@@ -14,19 +14,19 @@ export async function GET(
         return new NextResponse('Invalid filename', { status: 400 });
     }
 
-    // Look in path relative to CWD
-    const publicPath = join(process.cwd(), 'public/uploads', filename);
-    const cwd = process.cwd();
+    // Look in 'user_uploads' folder in root (matches upload route)
+    const storageDir = join(process.cwd(), 'user_uploads');
+    const filePath = join(storageDir, filename);
 
     // Try to find the file
-    if (!existsSync(publicPath)) {
+    if (!existsSync(filePath)) {
+        // Debugging info in 404 response
         let folderContents: string[] = [];
         try {
-            const dir = dirname(publicPath);
-            if (existsSync(dir)) {
-                folderContents = await readdir(dir);
+            if (existsSync(storageDir)) {
+                folderContents = await readdir(storageDir);
             } else {
-                folderContents = ['Directory does not exist'];
+                folderContents = ['Directory user_uploads does not exist'];
             }
         } catch (e: any) {
             folderContents = [`Error listing directory: ${e.message}`];
@@ -34,14 +34,14 @@ export async function GET(
 
         return NextResponse.json({
             error: 'File not found',
-            pathTried: publicPath,
-            cwd: cwd,
-            folderContents: folderContents.slice(0, 50)
+            pathTried: filePath,
+            cwd: process.cwd(),
+            folderDebug: folderContents.slice(0, 50)
         }, { status: 404 });
     }
 
     try {
-        const fileBuffer = await readFile(publicPath);
+        const fileBuffer = await readFile(filePath);
 
         // Determine content type
         const ext = filename.split('.').pop()?.toLowerCase();
@@ -50,6 +50,7 @@ export async function GET(
         if (ext === 'png') contentType = 'image/png';
         if (ext === 'gif') contentType = 'image/gif';
         if (ext === 'webp') contentType = 'image/webp';
+        if (ext === 'mp4') contentType = 'video/mp4'; // Added video support
 
         return new NextResponse(fileBuffer, {
             headers: {

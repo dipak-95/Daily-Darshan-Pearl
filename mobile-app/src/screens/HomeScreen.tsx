@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors } from '../constants/Colors';
@@ -50,11 +50,14 @@ export default function HomeScreen() {
 
     const fetchTemples = async () => {
         try {
+            console.log(`Fetching temples from: ${Config.API_BASE_URL}/temples`);
             const res = await fetch(`${Config.API_BASE_URL}/temples`);
             const data = await res.json();
+            if (!res.ok) throw new Error(JSON.stringify(data));
             setTemples(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch temples', error);
+            // alert(`Error fetching temples: ${error.message}`); // Optional: Uncomment for debugging
         } finally {
             setLoading(false);
             setRefreshing(false);

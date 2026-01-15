@@ -18,7 +18,16 @@ export async function POST(request: Request) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const filename = file.name.replace(/\.[^/.]+$/, "") + '-' + uniqueSuffix + '.' + file.name.split('.').pop();
 
-    const path = join(process.cwd(), 'public/uploads', filename);
+    // Ensure directory exists
+    const uploadDir = join(process.cwd(), 'public/uploads');
+    const { mkdir } = require('fs/promises');
+    try {
+        await mkdir(uploadDir, { recursive: true });
+    } catch (e) {
+        // Ignore error if directory exists
+    }
+
+    const path = join(uploadDir, filename);
 
     await writeFile(path, buffer);
 

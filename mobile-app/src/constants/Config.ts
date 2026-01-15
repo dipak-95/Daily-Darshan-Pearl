@@ -4,6 +4,6 @@ export const Config = {
     // Use your machine's LAN IP (e.g., http://192.168.1.5:3000) for physical devices.
     // Live VPS URL
     // Live VPS URL (Port 80/443 implied)
-    API_BASE_URL: 'http://sdpearl.cloud/api',
-    BASE_URL: 'http://sdpearl.cloud',
+    API_BASE_URL: 'https://sdpearl.cloud/api',
+    BASE_URL: 'https://sdpearl.cloud',
 };

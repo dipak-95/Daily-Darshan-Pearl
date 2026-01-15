@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, models } from 'mongoose';
 
 const TempleSchema = new Schema({
@@ -6,10 +7,11 @@ const TempleSchema = new Schema({
     nameHindi: { type: String },
     description: { type: String, required: true },
     descriptionHindi: { type: String },
-    image: { type: String, required: true },
+    image: { type: String, required: true }, // Cover Image
     location: { type: String, required: true },
     locationHindi: { type: String },
-    activeContentTypes: { type: [String], default: [] },
+    // Simplified structure for daily content:
+    // videos: { "2024-01-15": { "morningAarti": "url...", "morningDarshan": "url..." } }
     videos: { type: Map, of: Object, default: {} }
 }, { timestamps: true });
 

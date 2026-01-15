@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
+export const runtime = 'nodejs';
+
+
 export async function POST(request: Request) {
     try {
         const data = await request.formData();

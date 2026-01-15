@@ -3,6 +3,9 @@ import { readFile, readdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { existsSync } from 'fs';
 
+export const runtime = 'nodejs';
+
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ filename: string }> }

@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '100mb',
     },
   },
-  serverExternalPackages: ['fs', 'path'],
 };
 
 export default nextConfig;

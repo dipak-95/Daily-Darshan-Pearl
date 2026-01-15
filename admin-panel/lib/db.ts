@@ -1,83 +1,147 @@
-
 import fs from 'fs';
 import path from 'path';
 import { Temple, Poonam, Grahan } from './types';
 
+/* ----------------------------- TYPES ----------------------------- */
+
 type DBData = {
-    temples: Temple[];
-    poonams: Poonam[];
-    grahans: Grahan[];
+  temples: Temple[];
+  poonams: Poonam[];
+  grahans: Grahan[];
 };
 
+/* ------------------------- DEFAULT DATA -------------------------- */
+
+const DEFAULT_DATA: DBData = {
+  temples: [
+    {
+      id: '1',
+      name: 'Shree Somnath Jyotirlinga',
+      description: 'First among the twelve Aadi Jyotirlingas of India.',
+      location: 'Gujarat',
+      image:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Somnath_Mandir_Veraval_Gujarat_India_02.jpg/800px-Somnath_Mandir_Veraval_Gujarat_India_02.jpg',
+      activeContentTypes: [
+        'morningAarti',
+        'eveningAarti',
+        'morningDarshan',
+        'eveningDarshan',
+      ],
+      videos: {},
+    },
+    {
+      id: '2',
+      name: 'Shree Dwarkadhish Temple',
+      description: 'Hindu temple dedicated to the god Krishna.',
+      location: 'Dwarka, Gujarat',
+      image:
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Dwarkadhish_Temple_Dwarka_Gujarat.jpg/800px-Dwarkadhish_Temple_Dwarka_Gujarat.jpg',
+      activeContentTypes: ['morningDarshan', 'eveningDarshan'],
+      videos: {},
+    },
+  ],
+  poonams: [],
+  grahans: [],
+};
+
+/* ------------------------ DB CLASS ------------------------------- */
+
 class PersistentDB {
-    private dataFilePath: string;
-    public data: DBData;
+  private filePath: string;
+  private data: DBData;
 
-    constructor() {
-        this.dataFilePath = path.join(process.cwd(), 'data', 'db.json');
-        this.data = { temples: [], poonams: [], grahans: [] };
-        this.ensureDataDir();
-        this.load();
+  constructor() {
+    this.filePath = path.join(process.cwd(), 'data', 'db.json');
+    this.ensureDir();
+    this.data = this.load();
+  }
+
+  /* ----------------------- FILE SYSTEM --------------------------- */
+
+  private ensureDir() {
+    const dir = path.dirname(this.filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
+
+  private load(): DBData {
+    if (!fs.existsSync(this.filePath)) {
+      this.atomicWrite(DEFAULT_DATA);
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
 
-    private ensureDataDir() {
-        const dir = path.dirname(this.dataFilePath);
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
+    try {
+      const raw = fs.readFileSync(this.filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+
+      return {
+        temples: Array.isArray(parsed.temples)
+          ? parsed.temples
+          : DEFAULT_DATA.temples,
+        poonams: Array.isArray(parsed.poonams)
+          ? parsed.poonams
+          : [],
+        grahans: Array.isArray(parsed.grahans)
+          ? parsed.grahans
+          : [],
+      };
+    } catch (err) {
+      console.error('❌ DB corrupted. Resetting...', err);
+      this.atomicWrite(DEFAULT_DATA);
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
     }
+  }
 
-    private load() {
-        if (fs.existsSync(this.dataFilePath)) {
-            const fileContent = fs.readFileSync(this.dataFilePath, 'utf-8');
-            try {
-                this.data = JSON.parse(fileContent);
-            } catch (error) {
-                console.error('Failed to parse DB file:', error);
-                this.write(); // Overwrite with default if corrupt
-            }
-        } else {
-            // Seed Initial Data if empty
-            this.data.temples = [
-                {
-                    id: '1',
-                    name: 'Shree Somnath Jyotirlinga',
-                    description: 'First among the twelve Aadi Jyotirlingas of India.',
-                    location: 'Gujarat',
-                    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Somnath_Mandir_Veraval_Gujarat_India_02.jpg/800px-Somnath_Mandir_Veraval_Gujarat_India_02.jpg',
-                    activeContentTypes: ['morningAarti', 'eveningAarti', 'morningDarshan', 'eveningDarshan'],
-                    videos: {}
-                },
-                {
-                    id: '2',
-                    name: 'Shree Dwarkadhish Temple',
-                    description: 'Hindu temple dedicated to the god Krishna.',
-                    location: 'Dwarka, Gujarat',
-                    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Dwarkadhish_Temple_Dwarka_Gujarat.jpg/800px-Dwarkadhish_Temple_Dwarka_Gujarat.jpg',
-                    activeContentTypes: ['morningDarshan', 'eveningDarshan'],
-                    videos: {}
-                }
-            ];
-            this.write();
-        }
-    }
+  private atomicWrite(data: DBData) {
+    const tempPath = this.filePath + '.tmp';
+    fs.writeFileSync(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempPath, this.filePath);
+  }
 
-    public write() {
-        fs.writeFileSync(this.dataFilePath, JSON.stringify(this.data, null, 2));
-    }
+  private save() {
+    this.atomicWrite(this.data);
+  }
 
-    // Accessors ensuring latest data is returned (though in SINGLE process it's same ref)
-    // Serverless environments might benefit from reload, but for local dev this is fine.
+  /* ------------------------- ACCESSORS --------------------------- */
 
-    get temples() { return this.data.temples; }
-    set temples(val: Temple[]) { this.data.temples = val; this.write(); }
+  get temples(): Temple[] {
+    return this.data.temples;
+  }
 
-    get poonams() { return this.data.poonams; }
-    set poonams(val: Poonam[]) { this.data.poonams = val; this.write(); }
+  set temples(val: Temple[]) {
+    this.data.temples = val;
+    this.save();
+  }
 
-    get grahans() { return this.data.grahans; }
-    set grahans(val: Grahan[]) { this.data.grahans = val; this.write(); }
+  get poonams(): Poonam[] {
+    return this.data.poonams;
+  }
+
+  set poonams(val: Poonam[]) {
+    this.data.poonams = val;
+    this.save();
+  }
+
+  get grahans(): Grahan[] {
+    return this.data.grahans;
+  }
+
+  set grahans(val: Grahan[]) {
+    this.data.grahans = val;
+    this.save();
+  }
 }
 
-// Singleton Instance
-export const db = new PersistentDB();
+/* ------------------------- SINGLETON ----------------------------- */
+
+// Prevent multiple instances in Next.js dev / hot reload
+const globalDB = globalThis as unknown as { db?: PersistentDB };
+
+export const db =
+  globalDB.db ??
+  (() => {
+    const instance = new PersistentDB();
+    globalDB.db = instance;
+    return instance;
+  })();

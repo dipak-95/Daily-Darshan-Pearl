@@ -1,78 +1,64 @@
+
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, Heart, Calendar, Settings } from 'lucide-react-native';
-import { Colors } from '../constants/Colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { NavigationContainer } from '@react-navigation/native';
 import HomeScreen from '../screens/HomeScreen';
 import TempleDetailsScreen from '../screens/TempleDetailsScreen';
-import { FavoritesScreen, SettingsScreen } from '../screens/PlaceholderScreens';
+import FavoritesScreen from '../screens/FavoritesScreen';
 import PanchangScreen from '../screens/PanchangScreen';
-import { useLanguage } from '../context/LanguageContext';
+import SettingsScreen from '../screens/SettingsScreen';
+import SettingsDetailScreen from '../screens/SettingsDetailScreen';
+import { Home, Calendar, Settings, Heart } from 'lucide-react-native';
 
-const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
-function HomeStack() {
+function Placeholder() { return <></>; }
+
+function TabNavigator() {
     return (
-        <Stack.Navigator
-            screenOptions={{
-                headerStyle: { backgroundColor: Colors.primary },
-                headerTintColor: Colors.white,
-                headerTitleStyle: { fontWeight: 'bold' },
-                contentStyle: { backgroundColor: Colors.background },
-            }}
-        >
-            <Stack.Screen
-                name="HomeMain"
+        <Tab.Navigator screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: '#ea580c',
+            tabBarStyle: { height: 60, paddingBottom: 10 }
+        }}>
+            <Tab.Screen
+                name="HomeTab"
                 component={HomeScreen}
-                options={{ headerShown: false }}
+                options={{ title: 'Home', tabBarIcon: ({ color }) => <Home color={color} size={24} /> }}
             />
-            <Stack.Screen
-                name="TempleDetails"
-                component={TempleDetailsScreen}
-                options={{ title: 'Temple Details', headerBackTitleVisible: false }}
+            <Tab.Screen
+                name="Favorites"
+                component={FavoritesScreen}
+                options={{ tabBarIcon: ({ color }) => <Heart color={color} size={24} /> }}
             />
-        </Stack.Navigator>
+            <Tab.Screen
+                name="Panchang"
+                component={PanchangScreen}
+                options={{ tabBarIcon: ({ color }) => <Calendar color={color} size={24} /> }}
+            />
+            <Tab.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{ tabBarIcon: ({ color }) => <Settings color={color} size={24} /> }}
+            />
+        </Tab.Navigator>
     );
 }
 
 export default function RootNavigator() {
-    const insets = useSafeAreaInsets();
-    const { t } = useLanguage(); // Import hook
-
     return (
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ color, size }) => {
-                    let Icon;
-                    if (route.name === 'Home') Icon = Home;
-                    else if (route.name === 'Favorites') Icon = Heart;
-                    else if (route.name === 'Details') Icon = Calendar;
-                    else if (route.name === 'Settings') Icon = Settings;
-                    return Icon ? <Icon size={size} color={color} /> : null;
-                },
-                tabBarLabel: t(route.name.toLowerCase() === 'details' ? 'panchang' : route.name.toLowerCase()),
-                tabBarActiveTintColor: Colors.primary,
-                tabBarInactiveTintColor: Colors.secondary,
-                tabBarStyle: {
-                    backgroundColor: Colors.surface,
-                    borderTopColor: Colors.primary,
-                    borderTopWidth: 1,
-                    height: 60 + (insets.bottom > 0 ? insets.bottom : 10), // Dynamic Height
-                    paddingBottom: insets.bottom > 0 ? insets.bottom : 10,   // Dynamic Padding
-                    paddingTop: 8,
-                },
-                headerStyle: { backgroundColor: Colors.primary },
-                headerTintColor: Colors.white,
-                headerTitle: t(route.name.toLowerCase() === 'details' ? 'panchang' : route.name.toLowerCase()),
-            })}
-        >
-            <Tab.Screen name="Home" component={HomeStack} options={{ headerShown: false, tabBarLabel: t('home') }} />
-            <Tab.Screen name="Favorites" component={FavoritesScreen} options={{ tabBarLabel: t('favorites'), headerTitle: t('favorites') }} />
-            <Tab.Screen name="Details" component={PanchangScreen} options={{ tabBarLabel: t('panchang'), headerTitle: t('panchang') }} />
-            <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: t('settings'), headerTitle: t('settings') }} />
-        </Tab.Navigator>
+        <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Main" component={TabNavigator} />
+                <Stack.Screen name="TempleDetails" component={TempleDetailsScreen} />
+                <Stack.Screen
+                    name="SettingsDetail"
+                    component={SettingsDetailScreen}
+                    options={{ presentation: 'card', headerShown: false }}
+                />
+            </Stack.Navigator>
+        </NavigationContainer>
     );
 }

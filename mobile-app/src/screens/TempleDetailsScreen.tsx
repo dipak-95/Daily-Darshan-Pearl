@@ -1,316 +1,155 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Modal, ActivityIndicator, Alert, Platform } from 'react-native';
-import { useRoute } from '@react-navigation/native';
-import { Video, ResizeMode } from 'expo-av';
-import { Colors } from '../constants/Colors';
+import { View, Text, ScrollView, Image, TouchableOpacity, Dimensions, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { Config } from '../constants/Config';
-import { Temple, VideoContent } from '../types';
-import { Play, Calendar, MapPin, Camera, X, Share2, Download } from 'lucide-react-native';
-import { resolveImageUrl } from '../utils/helpers';
-// @ts-ignore: Deprecation warning suggestion
-import * as FileSystem from 'expo-file-system/legacy';
-import * as MediaLibrary from 'expo-media-library';
-import * as Sharing from 'expo-sharing';
-import { useLanguage } from '../context/LanguageContext';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Share2, Clock, MapPin, Video, Image as ImageIcon } from 'lucide-react-native';
+import { Video as ExpoVideo, ResizeMode } from 'expo-av';
 
 const { width } = Dimensions.get('window');
 
-const getYYYYMMDD = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-};
-
 export default function TempleDetailsScreen() {
-    const route = useRoute<any>();
-    const initialTemple = route.params.temple as Temple;
-    const [temple, setTemple] = useState<Temple>(initialTemple);
+    const route = useRoute();
+    const navigation = useNavigation();
+    const { temple } = route.params as any; // Passed from HomeScreen
 
-    const [selectedTab, setSelectedTab] = useState<'today' | 'yesterday'>('today');
-    const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-    const [mediaType, setMediaType] = useState<'video' | 'image' | null>(null);
-    const [downloading, setDownloading] = useState(false);
-    const videoRef = useRef<Video>(null);
+    const [playingVideo, setPlayingVideo] = useState<string | null>(null);
 
-    // Hooks
-    const { t, language } = useLanguage();
+    // Date Logic
+    const today = new Date().toISOString().slice(0, 10);
+    const dayData = temple.videos?.[today] || {};
 
-    useEffect(() => {
-        fetchLatestData();
-    }, [initialTemple.id]);
+    // Configured Types (default to all if missing)
+    const activeTypes = temple.activeContentTypes || ['morningDarshan', 'eveningDarshan', 'morningAarti', 'eveningAarti'];
 
-    const fetchLatestData = async () => {
-        try {
-            const res = await fetch(`${Config.API_BASE_URL}/temples`);
-            const data: Temple[] = await res.json();
-            const fresh = data.find(t => t.id === initialTemple.id);
-            if (fresh) {
-                setTemple(fresh);
-            }
-        } catch (e) {
-            console.error('Failed to refresh temple details', e);
-        }
+    // Resolve URL helper
+    const resolveUrl = (url: string) => {
+        if (!url) return null;
+        if (url.startsWith('http')) return url;
+        return `${Config.IMAGE_BASE_URL}${url}`;
     };
 
-    const handleDownload = async () => {
-        if (!mediaUrl) return;
-        setDownloading(true);
-        try {
-            const { status } = await MediaLibrary.requestPermissionsAsync(true);
-            if (status !== 'granted') {
-                Alert.alert(t('permissionNeeded'), 'Please grant permission to save photos to gallery.');
-                setDownloading(false);
-                return;
-            }
+    const renderContentBlock = (key: string, label: string, isVideo: boolean) => {
+        if (!activeTypes.includes(key)) return null;
 
-            const filename = mediaUrl.split('/').pop()?.replace(/[^a-zA-Z0-9.]/g, '_') || `download_${Date.now()}.jpg`;
-            const fileUri = ((FileSystem.documentDirectory || (FileSystem as any).cacheDirectory) as string) + filename;
+        const mediaUrl = resolveUrl(dayData[key]);
+        const hasMedia = !!mediaUrl;
 
-            const { uri } = await FileSystem.downloadAsync(mediaUrl, fileUri);
+        return (
+            <View key={key} style={styles.contentCard}>
+                <View style={styles.cardHeader}>
+                    <View style={[styles.iconBox, { backgroundColor: isVideo ? '#f3e8ff' : '#eff6ff' }]}>
+                        {isVideo ? <Video size={20} color="#9333ea" /> : <ImageIcon size={20} color="#2563eb" />}
+                    </View>
+                    <Text style={styles.cardTitle}>{label}</Text>
+                    {!hasMedia && <Text style={styles.pendingBadge}>Pending</Text>}
+                </View>
 
-            try {
-                await MediaLibrary.createAssetAsync(uri);
-                Alert.alert('Success', t('savedToGallery'));
-            } catch (e: any) {
-                console.error("Save Error", e);
-                // On Android 10+, this might need 'expo-media-library' saveToLibraryAsync
-                Alert.alert('Error', 'Could not save to gallery: ' + e.message);
-            }
-
-        } catch (error: any) {
-            console.error(error);
-            Alert.alert('Error', `Details: ${error.message}`);
-        } finally {
-            setDownloading(false);
-        }
+                {hasMedia ? (
+                    <View style={styles.mediaContainer}>
+                        {isVideo ? (
+                            playingVideo === key ? (
+                                <ExpoVideo
+                                    source={{ uri: mediaUrl }}
+                                    style={styles.media}
+                                    useNativeControls
+                                    resizeMode={ResizeMode.CONTAIN}
+                                    isLooping
+                                    shouldPlay
+                                />
+                            ) : (
+                                <TouchableOpacity onPress={() => setPlayingVideo(key)} style={styles.videoPlaceholder}>
+                                    <View style={styles.playButton}>
+                                        <Video size={32} color="white" fill="white" />
+                                    </View>
+                                    <Text style={styles.playText}>Play Video</Text>
+                                </TouchableOpacity>
+                            )
+                        ) : (
+                            <Image source={{ uri: mediaUrl }} style={styles.media} resizeMode="cover" />
+                        )}
+                    </View>
+                ) : (
+                    <View style={styles.emptyState}>
+                        <Clock size={24} color="#9ca3af" />
+                        <Text style={styles.emptyText}>Darshan not uploaded yet</Text>
+                    </View>
+                )}
+            </View>
+        );
     };
-
-    const handleShare = async () => {
-        if (!mediaUrl) return;
-        setDownloading(true);
-        try {
-            const filename = mediaUrl.split('/').pop()?.replace(/[^a-zA-Z0-9.]/g, '_') || `share_${Date.now()}.jpg`;
-            const fileUri = ((FileSystem.documentDirectory || (FileSystem as any).cacheDirectory) as string) + filename;
-
-            const { uri } = await FileSystem.downloadAsync(mediaUrl, fileUri);
-
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri);
-            } else {
-                Alert.alert('Error', 'Sharing is not available on this device');
-            }
-
-        } catch (error: any) {
-            console.error(error);
-            Alert.alert('Share Error', `${error.message}`);
-        } finally {
-            setDownloading(false);
-        }
-    };
-
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const dateKey = selectedTab === 'today' ? getYYYYMMDD(today) : getYYYYMMDD(yesterday);
-    const videoData: VideoContent = (temple.videos && temple.videos[dateKey]) ? temple.videos[dateKey] : {};
-
-    const contents = [
-        { label: t('morningDarshan'), url: videoData.morningDarshan, type: 'image' },
-        { label: t('morningAarti'), url: videoData.morningAarti, type: 'video' },
-        { label: t('eveningDarshan'), url: videoData.eveningDarshan, type: 'image' },
-        { label: t('eveningAarti'), url: videoData.eveningAarti, type: 'video' },
-    ].filter(v => v.url);
-
-    const handleMediaPress = (item: { url?: string; type: string }) => {
-        const resolved = resolveImageUrl(item.url);
-        if (!resolved) return;
-        setMediaUrl(resolved);
-        setMediaType(item.type as any);
-    };
-
-    const resolvedTempleImage = resolveImageUrl(temple.image);
-    const displayName = (language === 'hi' && temple.nameHindi) ? temple.nameHindi : temple.name;
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            {/* Hero Media Player */}
-            <View style={styles.heroContainer}>
-                {resolvedTempleImage ? (
-                    <Image source={{ uri: resolvedTempleImage }} style={styles.heroImage} resizeMode="cover" />
-                ) : (
-                    <View style={[styles.heroImage, { backgroundColor: '#333' }]} />
-                )}
+        <ScrollView style={styles.container} bounces={false}>
+            {/* Header Image */}
+            <View style={styles.headerContainer}>
+                <Image source={{ uri: resolveUrl(temple.image) }} style={styles.headerImage} />
+                <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.gradient} />
 
-                <View style={styles.heroOverlay}>
-                    <Text style={styles.templeName}>{displayName}</Text>
-                    <View style={styles.locationTag}>
-                        <MapPin size={14} color={Colors.white} />
+                {/* Navbar */}
+                <View style={styles.navbar}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navButton}>
+                        <ChevronLeft color="white" size={28} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.navButton}>
+                        <Share2 color="white" size={24} />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Title Info */}
+                <View style={styles.titleContainer}>
+                    <Text style={styles.templeName}>{temple.name}</Text>
+                    {temple.nameHindi && <Text style={styles.templeNameHindi}>{temple.nameHindi}</Text>}
+                    <View style={styles.locationRow}>
+                        <MapPin color="#fb923c" size={16} />
                         <Text style={styles.locationText}>{temple.location}</Text>
                     </View>
                 </View>
             </View>
 
-            {/* Date Tabs */}
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tab, selectedTab === 'today' && styles.activeTab]}
-                    onPress={() => setSelectedTab('today')}
-                >
-                    <Text style={[styles.tabText, selectedTab === 'today' && styles.activeTabText]}>{t('today')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, selectedTab === 'yesterday' && styles.activeTab]}
-                    onPress={() => setSelectedTab('yesterday')}
-                >
-                    <Text style={[styles.tabText, selectedTab === 'yesterday' && styles.activeTabText]}>{t('yesterday')}</Text>
-                </TouchableOpacity>
+            {/* Content Body */}
+            <View style={styles.body}>
+                <Text style={styles.sectionHeader}>Today's Darshan ({new Date().toLocaleDateString()})</Text>
+
+                {renderContentBlock('morningDarshan', 'Morning Darshan', false)}
+                {renderContentBlock('eveningDarshan', 'Evening Darshan', false)}
+                {renderContentBlock('morningAarti', 'Morning Aarti', true)}
+                {renderContentBlock('eveningAarti', 'Evening Aarti', true)}
+
+                <View style={{ height: 40 }} />
             </View>
-
-            {/* Content Grid */}
-            <View style={styles.grid}>
-                {contents.length > 0 ? (
-                    contents.map((item, index) => {
-                        const resolvedUrl = resolveImageUrl(item.url);
-                        return (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.contentCard}
-                                onPress={() => handleMediaPress(item as any)}
-                            >
-                                {item.type === 'image' && resolvedUrl ? (
-                                    <Image
-                                        source={{ uri: resolvedUrl }}
-                                        style={styles.cardThumbnail}
-                                        resizeMode="cover"
-                                    />
-                                ) : (
-                                    <View style={styles.thumbnailPlaceholder}>
-                                        {item.type === 'video' ? (
-                                            <Play size={32} color={Colors.primary} />
-                                        ) : (
-                                            <Camera size={32} color={Colors.primary} />
-                                        )}
-                                    </View>
-                                )}
-                                <View style={styles.cardFooter}>
-                                    <Text style={styles.cardLabel}>{item.label}</Text>
-                                </View>
-                            </TouchableOpacity>
-                        );
-                    })
-                ) : (
-                    <View style={styles.emptyState}>
-                        <Calendar size={48} color={Colors.secondary} />
-                        <Text style={styles.emptyText}>{selectedTab ? t('today') : t('yesterday')} - No Content</Text>
-                    </View>
-                )}
-            </View>
-
-            <View style={styles.infoSection}>
-                <Text style={styles.sectionTitle}>{t('templeDetails')}</Text>
-                <Text style={styles.description}>
-                    {(language === 'hi' && temple.descriptionHindi) ? temple.descriptionHindi : temple.description}
-                </Text>
-            </View>
-
-            {/* Fullscreen Media Modal */}
-            <Modal visible={!!mediaUrl} transparent={true} animationType="fade" onRequestClose={() => setMediaUrl(null)}>
-                <View style={styles.modalContainer}>
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setMediaUrl(null)}>
-                        <X size={30} color="white" />
-                    </TouchableOpacity>
-
-                    <View style={styles.mediaWrapper}>
-                        {mediaType === 'video' ? (
-                            <Video
-                                ref={videoRef}
-                                source={{ uri: mediaUrl! }}
-                                style={styles.fullscreenMedia}
-                                useNativeControls={false}
-                                resizeMode={ResizeMode.CONTAIN}
-                                isLooping
-                                shouldPlay
-                            />
-                        ) : (
-                            <Image
-                                source={{ uri: mediaUrl! }}
-                                style={styles.fullscreenMedia}
-                                resizeMode="contain"
-                            />
-                        )}
-                    </View>
-
-                    {/* Action Buttons for Image/Video */}
-                    <View style={styles.bottomActions}>
-                        <TouchableOpacity style={styles.actionBtn} onPress={handleShare} disabled={downloading}>
-                            {downloading ? <ActivityIndicator color="white" size="small" /> : <Share2 size={24} color="white" />}
-                            <Text style={styles.actionText}>{t('shareAction')}</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionBtn} onPress={handleDownload} disabled={downloading}>
-                            {downloading ? <ActivityIndicator color="white" size="small" /> : <Download size={24} color="white" />}
-                            <Text style={styles.actionText}>{t('download')}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.background },
-    heroContainer: { height: 300, position: 'relative' },
-    heroImage: { width: '100%', height: '100%' },
-    heroOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(0,0,0,0.4)' },
-    templeName: { fontSize: 28, fontWeight: 'bold', color: Colors.white, marginBottom: 4 },
-    locationTag: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    locationText: { color: Colors.white, fontSize: 14 },
+    container: { flex: 1, backgroundColor: '#fff' },
+    headerContainer: { height: 300, position: 'relative' },
+    headerImage: { width: '100%', height: '100%' },
+    gradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 150 },
+    navbar: { position: 'absolute', top: 50, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between', zIndex: 10 },
+    navButton: { backgroundColor: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 20 },
+    titleContainer: { position: 'absolute', bottom: 20, left: 20, right: 20 },
+    templeName: { color: 'white', fontSize: 28, fontWeight: 'bold' },
+    templeNameHindi: { color: 'rgba(255,255,255,0.9)', fontSize: 18, marginBottom: 8 },
+    locationRow: { flexDirection: 'row', items: 'center', gap: 6 },
+    locationText: { color: '#fb923c', fontSize: 14, fontWeight: 'bold' },
 
-    tabContainer: { flexDirection: 'row', padding: 16, borderBottomWidth: 1, borderBottomColor: '#eee', backgroundColor: Colors.surface },
-    tab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 8 },
-    activeTab: { backgroundColor: Colors.primary + '20' },
-    tabText: { color: Colors.text, fontWeight: '600' },
-    activeTabText: { color: Colors.primary, fontWeight: 'bold' },
+    body: { padding: 20, backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, marginTop: -30 },
+    sectionHeader: { fontSize: 18, fontWeight: 'bold', color: '#1f2937', marginBottom: 20 },
 
-    grid: { padding: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-    contentCard: { width: (width - 44) / 2, height: 140, backgroundColor: Colors.surface, borderRadius: 12, elevation: 2, overflow: 'hidden' },
-    cardThumbnail: { flex: 1, width: '100%' },
-    thumbnailPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9f9f9' },
-    cardFooter: { padding: 8, backgroundColor: Colors.surface },
-    cardLabel: { fontSize: 12, fontWeight: 'bold', color: Colors.text, textAlign: 'center' },
+    contentCard: { marginBottom: 24, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: '#f3f4f6', overflow: 'hidden' },
+    cardHeader: { flexDirection: 'row', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+    iconBox: { padding: 8, borderRadius: 10, marginRight: 12 },
+    cardTitle: { fontSize: 16, fontWeight: '600', color: '#374151', flex: 1 },
+    pendingBadge: { fontSize: 12, color: '#9ca3af', backgroundColor: '#f3f4f6', paddingHorizontal: 8, py: 2, borderRadius: 6 },
 
-    emptyState: { width: '100%', padding: 40, alignItems: 'center', justifyContent: 'center', gap: 12 },
-    emptyText: { color: Colors.secondary, fontSize: 16 },
+    mediaContainer: { height: 220, backgroundColor: '#000' },
+    media: { width: '100%', height: '100%' },
+    videoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#111' },
+    playButton: { backgroundColor: '#ea580c', padding: 16, borderRadius: 50, marginBottom: 8 },
+    playText: { color: 'white', fontWeight: '500' },
 
-    infoSection: { padding: 20 },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: Colors.primaryDark, marginBottom: 8 },
-    description: { fontSize: 14, color: Colors.text, lineHeight: 22 },
-
-    modalContainer: { flex: 1, backgroundColor: 'black', justifyContent: 'flex-end' },
-    closeButton: { position: 'absolute', top: 50, right: 20, zIndex: 20, padding: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20 },
-    mediaWrapper: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    fullscreenMedia: { width: width, height: '100%', backgroundColor: 'black' },
-
-    bottomActions: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 30,
-        paddingHorizontal: 20,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        width: '100%',
-        paddingBottom: 40, // Safe area
-    },
-    actionBtn: {
-        alignItems: 'center',
-        gap: 8,
-        padding: 10,
-    },
-    actionText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: '500',
-    }
+    emptyState: { padding: 40, alignItems: 'center', justifyContent: 'center', gap: 8 },
+    emptyText: { color: '#9ca3af', fontSize: 14 }
 });

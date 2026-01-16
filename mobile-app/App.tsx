@@ -1,25 +1,12 @@
-
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './src/navigation/RootNavigator';
-
-import { FavoritesProvider } from './src/context/FavoritesContext';
-
-import { LanguageProvider } from './src/context/LanguageContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function App() {
-  return (
-    <SafeAreaProvider>
-      <LanguageProvider>
-        <FavoritesProvider>
-          <NavigationContainer>
-            <StatusBar style="light" backgroundColor="#FF9933" />
+    return (
+        <SafeAreaProvider>
             <RootNavigator />
-          </NavigationContainer>
-        </FavoritesProvider>
-      </LanguageProvider>
-    </SafeAreaProvider>
-  );
+            <StatusBar style="auto" />
+        </SafeAreaProvider>
+    );
 }

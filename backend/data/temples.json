@@ -1,0 +1,15 @@
+[
+  {
+    "videos": {},
+    "activeContentTypes": [
+      "morningDarshan"
+    ],
+    "name": "Dwarka",
+    "location": "df",
+    "description": "dfs",
+    "image": "http://localhost:5000/uploads/file-1768539452293-629696288.jpeg",
+    "_id": "944c11fc-044f-43b4-bcd9-99baeccc5aea",
+    "createdAt": "2026-01-16T04:57:36.721Z",
+    "updatedAt": "2026-01-16T04:57:36.721Z"
+  }
+]

@@ -1,33 +1,24 @@
-
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
-import { Colors } from '../constants/Colors';
 import { Config } from '../constants/Config';
-import { Poonam, Grahan } from '../types';
-import { useLanguage } from '../context/LanguageContext';
-import { Moon, Sun, Calendar, MapPin } from 'lucide-react-native';
+import { Moon, Sun } from 'lucide-react-native';
 
 export default function PanchangScreen() {
-    const { t, language } = useLanguage();
     const [activeTab, setActiveTab] = useState<'poonam' | 'grahan'>('poonam');
-    const [poonams, setPoonams] = useState<Poonam[]>([]);
-    const [grahans, setGrahans] = useState<Grahan[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [activeTab]);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
-            const [poonamRes, grahanRes] = await Promise.all([
-                fetch(`${Config.API_BASE_URL}/poonam`),
-                fetch(`${Config.API_BASE_URL}/grahan`)
-            ]);
-            const poonamData = await poonamRes.json();
-            const grahanData = await grahanRes.json();
-            setPoonams(poonamData);
-            setGrahans(grahanData);
+            const endpoint = activeTab === 'poonam' ? '/poonam' : '/grahan';
+            const res = await fetch(`${Config.API_BASE_URL}${endpoint}`);
+            const result = await res.json();
+            setData(result);
         } catch (error) {
             console.error(error);
         } finally {
@@ -35,105 +26,111 @@ export default function PanchangScreen() {
         }
     };
 
-    const formatDate = (isoStr: string) => {
-        if (!isoStr) return '';
-        const date = new Date(isoStr);
-        // Simple formatting
-        return date.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN', {
-            day: 'numeric', month: 'short', year: 'numeric',
-            hour: '2-digit', minute: '2-digit'
-        });
-    };
+    const renderToggle = () => (
+        <View style={{ flexDirection: 'row', backgroundColor: 'white', margin: 20, borderRadius: 12, padding: 4, elevation: 2 }}>
+            <TouchableOpacity
+                onPress={() => setActiveTab('poonam')}
+                style={{
+                    flex: 1,
+                    paddingVertical: 12,
+                    backgroundColor: activeTab === 'poonam' ? '#ea580c' : 'transparent',
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8
+                }}
+            >
+                <Moon size={18} color={activeTab === 'poonam' ? 'white' : '#64748b'} />
+                <Text style={{ fontWeight: '600', color: activeTab === 'poonam' ? 'white' : '#64748b' }}>Poonam</Text>
+            </TouchableOpacity>
 
-    const renderPoonam = ({ item }: { item: Poonam }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <View style={[styles.iconBox, { backgroundColor: '#E0F7FA' }]}>
-                    <Moon size={24} color="#006064" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.dateLabel}>{language === 'hi' ? 'प्रारंभ' : 'Starts'}</Text>
-                    <Text style={styles.dateValue}>{formatDate(item.startDateTime)}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.dateLabel}>{language === 'hi' ? 'समाप्त' : 'Ends'}</Text>
-                    <Text style={styles.dateValue}>{formatDate(item.endDateTime)}</Text>
-                </View>
-            </View>
-            <View style={styles.divider} />
-            <Text style={styles.description}>
-                {(language === 'hi' && item.descriptionHindi) ? item.descriptionHindi : item.description}
-            </Text>
+            <TouchableOpacity
+                onPress={() => setActiveTab('grahan')}
+                style={{
+                    flex: 1,
+                    paddingVertical: 12,
+                    backgroundColor: activeTab === 'grahan' ? '#ea580c' : 'transparent',
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8
+                }}
+            >
+                <Sun size={18} color={activeTab === 'grahan' ? 'white' : '#64748b'} />
+                <Text style={{ fontWeight: '600', color: activeTab === 'grahan' ? 'white' : '#64748b' }}>Grahan</Text>
+            </TouchableOpacity>
         </View>
     );
 
-    const renderGrahan = ({ item }: { item: Grahan }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <View style={[styles.iconBox, { backgroundColor: '#FFF3E0' }]}>
-                    <Sun size={24} color="#E65100" />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.dateLabel}>{language === 'hi' ? 'प्रारंभ' : 'Starts'}</Text>
-                    <Text style={styles.dateValue}>{formatDate(item.startDateTime)}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.dateLabel}>{language === 'hi' ? 'समाप्त' : 'Ends'}</Text>
-                    <Text style={styles.dateValue}>{formatDate(item.endDateTime)}</Text>
-                </View>
-            </View>
-
-            <View style={styles.infoRow}>
-                <MapPin size={16} color={Colors.secondary} />
-                <Text style={styles.locationText}>
-                    {(language === 'hi' && item.affectedPlacesHindi) ? item.affectedPlacesHindi : item.affectedPlaces}
+    const renderItem = ({ item }: { item: any }) => (
+        <View style={{
+            backgroundColor: 'white',
+            marginHorizontal: 20,
+            marginBottom: 12,
+            padding: 16,
+            borderRadius: 16,
+            elevation: 2,
+            borderLeftWidth: 4,
+            borderLeftColor: activeTab === 'poonam' ? '#fb923c' : '#ef4444'
+        }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1f2937' }}>
+                    {new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </Text>
+                <Text style={{ fontSize: 12, color: '#64748b', backgroundColor: '#f1f5f9', padding: 4, paddingHorizontal: 8, borderRadius: 6 }}>
+                    {new Date(item.date).toLocaleDateString('en-IN', { weekday: 'long' })}
                 </Text>
             </View>
 
-            <View style={styles.divider} />
-            <Text style={styles.description}>
-                {(language === 'hi' && item.descriptionHindi) ? item.descriptionHindi : item.description}
-            </Text>
+            {item.title && (
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#ea580c', marginBottom: 4 }}>
+                    {item.title}
+                </Text>
+            )}
+
+            {item.description && (
+                <Text style={{ color: '#4b5563', lineHeight: 20 }}>{item.description}</Text>
+            )}
+
+            {activeTab === 'grahan' && (
+                <View style={{ marginTop: 12, flexDirection: 'row', gap: 12 }}>
+                    <View style={{ backgroundColor: '#fff1f2', padding: 8, borderRadius: 8, flex: 1 }}>
+                        <Text style={{ fontSize: 10, color: '#e11d48', fontWeight: 'bold' }}>START</Text>
+                        <Text style={{ color: '#be123c', fontWeight: '600' }}>{item.startTime || 'TBA'}</Text>
+                    </View>
+                    <View style={{ backgroundColor: '#f0f9ff', padding: 8, borderRadius: 8, flex: 1 }}>
+                        <Text style={{ fontSize: 10, color: '#0284c7', fontWeight: 'bold' }}>END</Text>
+                        <Text style={{ color: '#0369a1', fontWeight: '600' }}>{item.endTime || 'TBA'}</Text>
+                    </View>
+                </View>
+            )}
         </View>
     );
 
     return (
-        <View style={styles.container}>
-            {/* Tabs */}
-            <View style={styles.tabs}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'poonam' && styles.activeTab]}
-                    onPress={() => setActiveTab('poonam')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'poonam' && styles.activeTabText]}>
-                        {language === 'hi' ? 'पूनम' : 'Poonam'}
-                    </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'grahan' && styles.activeTab]}
-                    onPress={() => setActiveTab('grahan')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'grahan' && styles.activeTabText]}>
-                        {language === 'hi' ? 'ग्रहण' : 'Grahan'}
-                    </Text>
-                </TouchableOpacity>
+        <View style={{ flex: 1, backgroundColor: '#FFF8F0', paddingTop: 60 }}>
+            <View style={{ paddingHorizontal: 20 }}>
+                <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#ea580c' }}>Hindu Calendar</Text>
+                <Text style={{ color: '#666' }}>Upcoming religious events</Text>
             </View>
 
+            {renderToggle()}
+
             {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="large" color={Colors.primary} />
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#ea580c" />
                 </View>
             ) : (
                 <FlatList
-                    data={activeTab === 'poonam' ? poonams : grahans}
-                    keyExtractor={item => item.id}
-                    renderItem={activeTab === 'poonam' ? renderPoonam as any : renderGrahan as any}
-                    contentContainerStyle={styles.list}
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={{ paddingBottom: 20 }}
                     ListEmptyComponent={
-                        <View style={styles.center}>
-                            <Text style={styles.emptyText}>
-                                {language === 'hi' ? 'कोई जानकारी उपलब्ध नहीं है' : 'No data available'}
-                            </Text>
+                        <View style={{ alignItems: 'center', marginTop: 50 }}>
+                            <Text style={{ color: '#94a3b8' }}>No data available for {activeTab}</Text>
                         </View>
                     }
                 />
@@ -141,29 +138,3 @@ export default function PanchangScreen() {
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.background },
-    tabs: { flexDirection: 'row', backgroundColor: Colors.surface, padding: 10, margin: 16, borderRadius: 12, elevation: 2 },
-    tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-    activeTab: { backgroundColor: Colors.primary },
-    tabText: { color: Colors.text, fontWeight: '600', fontSize: 16 },
-    activeTabText: { color: 'white', fontWeight: 'bold' },
-
-    list: { paddingHorizontal: 16, paddingBottom: 20 },
-    card: { backgroundColor: Colors.surface, borderRadius: 12, padding: 16, marginBottom: 12, elevation: 2 },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-    iconBox: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-
-    dateLabel: { fontSize: 12, color: Colors.secondary, textTransform: 'uppercase', fontWeight: 'bold' },
-    dateValue: { fontSize: 14, color: Colors.text, fontWeight: '600' },
-
-    divider: { height: 1, backgroundColor: '#eee', marginVertical: 8 },
-    description: { fontSize: 14, color: Colors.text, lineHeight: 20 },
-
-    infoRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8, backgroundColor: '#f9f9f9', padding: 8, borderRadius: 6 },
-    locationText: { fontSize: 13, color: Colors.text, fontWeight: '500', flex: 1 },
-
-    center: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
-    emptyText: { color: Colors.secondary, fontSize: 16 }
-});

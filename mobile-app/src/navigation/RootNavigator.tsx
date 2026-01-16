@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Home, Heart, Calendar, Settings } from 'lucide-react-native';
 import { Colors } from '../constants/Colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import HomeScreen from '../screens/HomeScreen';
 import TempleDetailsScreen from '../screens/TempleDetailsScreen';
@@ -37,10 +37,6 @@ function HomeStack() {
         </Stack.Navigator>
     );
 }
-
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// ... (imports)
 
 export default function RootNavigator() {
     const insets = useSafeAreaInsets();

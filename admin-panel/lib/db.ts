@@ -17,8 +17,11 @@ const DEFAULT_DATA: DBData = {
     {
       id: '1',
       name: 'Shree Somnath Jyotirlinga',
+      nameHindi: 'श्री सोमनाथ ज्योतिर्लिंग',
       description: 'First among the twelve Aadi Jyotirlingas of India.',
+      descriptionHindi: 'भारत के बारह आदि ज्योतिर्लिंगों में से पहला।',
       location: 'Gujarat',
+      locationHindi: 'गुजरात',
       image:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Somnath_Mandir_Veraval_Gujarat_India_02.jpg/800px-Somnath_Mandir_Veraval_Gujarat_India_02.jpg',
       activeContentTypes: [
@@ -32,8 +35,11 @@ const DEFAULT_DATA: DBData = {
     {
       id: '2',
       name: 'Shree Dwarkadhish Temple',
+      nameHindi: 'श्री द्वारकाधीश मंदिर',
       description: 'Hindu temple dedicated to the god Krishna.',
+      descriptionHindi: 'भगवान कृष्ण को समर्पित हिंदू मंदिर।',
       location: 'Dwarka, Gujarat',
+      locationHindi: 'द्वारका, गुजरात',
       image:
         'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Dwarkadhish_Temple_Dwarka_Gujarat.jpg/800px-Dwarkadhish_Temple_Dwarka_Gujarat.jpg',
       activeContentTypes: ['morningDarshan', 'eveningDarshan'],

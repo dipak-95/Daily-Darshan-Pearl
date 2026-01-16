@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { readFile, readdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync, createReadStream, statSync } from 'fs';
-import { tmpdir } from 'os';
 import { Readable } from 'stream';
 
 export const runtime = 'nodejs';
@@ -13,24 +12,28 @@ export async function GET(
 ) {
     const { filename } = await params;
 
-    // Look in system temp first (most reliable), then others as fallback
-    const systemTemp = join(tmpdir(), 'spectral_uploads', filename);
-    const candidates = [
-        systemTemp,
-        join(process.cwd(), 'user_uploads', filename),
-        join(process.cwd(), 'public', 'uploads', filename),
-    ];
+    // Look in persistent local folder
+    let filePath = join(process.cwd(), 'user_uploads', filename);
 
-    let filePath: string | null = null;
-    for (const p of candidates) {
-        if (existsSync(p)) {
-            filePath = p;
-            break;
+    if (!existsSync(filePath)) {
+        // Fallback checks
+        const candidates = [
+            join(process.cwd(), 'public', 'uploads', filename),
+            // join(tmpdir(), 'spectral_uploads', filename) // Removed tmpdir as we are moving away from it
+        ];
+
+        let found = false;
+        for (const p of candidates) {
+            if (existsSync(p)) {
+                filePath = p;
+                found = true;
+                break;
+            }
         }
-    }
 
-    if (!filePath) {
-        return NextResponse.json({ error: 'File not found', searched: candidates }, { status: 404 });
+        if (!found) {
+            return NextResponse.json({ error: 'File not found' }, { status: 404 });
+        }
     }
 
     const stat = statSync(filePath);
@@ -55,7 +58,6 @@ export async function GET(
             const chunksize = (end - start) + 1;
             const fileStream = createReadStream(filePath, { start, end });
 
-            // Convert to web readable stream for Next.js
             const stream = new ReadableStream({
                 start(controller) {
                     fileStream.on('data', chunk => controller.enqueue(chunk));
@@ -83,7 +85,7 @@ export async function GET(
         headers: {
             'Content-Type': contentType,
             'Content-Length': fileSize.toString(),
-            'Cache-Control': 'no-store, no-cache, must-revalidate', // Prevent caching during debug
+            'Cache-Control': 'public, max-age=31536000, immutable',
             'Access-Control-Allow-Origin': '*',
         },
     });

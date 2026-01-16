@@ -119,7 +119,15 @@ export default function TemplesPage() {
       const data = new FormData();
       data.append('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: data });
-      const json = await res.json();
+
+      let json;
+      try {
+        json = await res.json();
+      } catch (e) {
+        // If JSON parse fails, it's likely an HTML error page (like 413 or 500)
+        throw new Error(`Server Error (${res.status}): ${res.statusText}`);
+      }
+
       if (!json.success) throw new Error(json.message);
       return json.url;
     }
@@ -176,7 +184,7 @@ export default function TemplesPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">Temples</h1>
           <button onClick={handleCreate} className="bg-orange-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-orange-700 transition-colors shadow-md">
-            <Plus size={20} /> Add Temple
+            <Plus size={20} /> Add New Temple (+)
           </button>
         </div>
 

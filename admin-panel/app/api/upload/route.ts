@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { tmpdir } from 'os';
+
 
 export const runtime = 'nodejs';
 
@@ -16,8 +16,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'No file uploaded' }, { status: 400 });
         }
 
-        // Use system temp dir which is reliably writable and consistent
-        const uploadDir = join(tmpdir(), 'spectral_uploads');
+        // Use a persistent folder in the project root
+        const uploadDir = join(process.cwd(), 'user_uploads');
         await mkdir(uploadDir, { recursive: true });
 
         const bytes = await file.arrayBuffer();

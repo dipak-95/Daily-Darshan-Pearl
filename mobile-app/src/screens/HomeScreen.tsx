@@ -2,7 +2,7 @@ import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, Dimen
 import React, { useEffect, useState, useCallback } from 'react';
 import { Config } from '../constants/Config';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Heart, SearchX } from 'lucide-react-native';
+import { Heart, Search } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -155,7 +155,7 @@ export default function HomeScreen({ navigation }: any) {
                 }
                 ListEmptyComponent={
                     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100 }}>
-                        <SearchX size={64} color="#e5e7eb" />
+                        <Search size={64} color="#e5e7eb" />
                         <Text style={{ color: '#9ca3af', marginTop: 16, fontSize: 16 }}>No temples found</Text>
                     </View>
                 }

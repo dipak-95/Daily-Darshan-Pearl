@@ -20,6 +20,7 @@ if (!fs.existsSync(uploadDir)) {
 
 // Static File Serving (Crucial for Images/Videos)
 app.use('/uploads', express.static(uploadDir));
+app.use('/api/uploads', express.static(uploadDir)); // Fix for Nginx Proxy Path
 
 // Database Connection
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb+srv://dipak:Dipak123@cluster0.pbgca.mongodb.net/daily-darshan?retryWrites=true&w=majority&appName=Cluster0';

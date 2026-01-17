@@ -1,15 +1,23 @@
 [
   {
-    "videos": {},
+    "videos": {
+      "2026-01-17": {
+        "morningDarshan": "http://localhost:5000/uploads/file-1768628279105-397512231.jpg",
+        "eveningDarshan": "http://localhost:5000/uploads/file-1768629928235-149857085.png",
+        "morningAarti": "http://localhost:5000/uploads/file-1768629982767-331307130.mp4"
+      }
+    },
     "activeContentTypes": [
-      "morningDarshan"
+      "morningDarshan",
+      "eveningDarshan",
+      "morningAarti"
     ],
     "name": "Dwarka",
-    "location": "df",
-    "description": "dfs",
-    "image": "http://localhost:5000/uploads/file-1768539452293-629696288.jpeg",
-    "_id": "944c11fc-044f-43b4-bcd9-99baeccc5aea",
-    "createdAt": "2026-01-16T04:57:36.721Z",
-    "updatedAt": "2026-01-16T04:57:36.721Z"
+    "location": "Gujarat",
+    "description": "fvjkjd kdgvngk s mhf",
+    "image": "http://localhost:5000/uploads/file-1768628274267-757099232.jpg",
+    "_id": "246ab5c2-7f84-4b9f-82a1-f2933a7b49b7",
+    "createdAt": "2026-01-17T05:38:00.755Z",
+    "updatedAt": "2026-01-17T06:06:24.160Z"
   }
 ]

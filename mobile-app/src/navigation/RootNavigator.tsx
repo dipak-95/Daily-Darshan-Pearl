@@ -47,6 +47,7 @@ function TabNavigator() {
     );
 }
 
+
 export default function RootNavigator() {
     return (
         <NavigationContainer>

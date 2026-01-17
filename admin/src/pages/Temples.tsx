@@ -13,6 +13,7 @@ type VideoContent = {
 };
 type Temple = {
     id: string;
+    _id?: string;
     name: string;
     nameHindi?: string;
     description: string;
@@ -77,8 +78,8 @@ export default function TemplesPage() {
                 activeContentTypes: formData.activeContentTypes || []
             };
 
-            if (formData.id) {
-                await axios.put(`${API_BASE_URL}/temples/${formData.id}`, payload);
+            if (formData._id || formData.id) {
+                await axios.put(`${API_BASE_URL}/temples/${formData._id || formData.id}`, payload);
             } else {
                 await axios.post(`${API_BASE_URL}/temples`, payload);
             }
@@ -190,7 +191,7 @@ export default function TemplesPage() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTemples.map(t => (
-                            <div key={t.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
+                            <div key={t._id || t.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
                                 <div className="h-48 bg-gray-100 relative overflow-hidden">
                                     {t.image ? (
                                         <img src={t.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={t.name} />
@@ -198,7 +199,7 @@ export default function TemplesPage() {
                                         <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={40} /></div>
                                     )}
                                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleDelete(t.id)} className="p-2 bg-white/90 text-red-500 rounded-full hover:bg-red-50 shadow-sm backdrop-blur-sm">
+                                        <button onClick={() => handleDelete(t._id || t.id)} className="p-2 bg-white/90 text-red-500 rounded-full hover:bg-red-50 shadow-sm backdrop-blur-sm">
                                             <Trash2 size={18} />
                                         </button>
                                     </div>

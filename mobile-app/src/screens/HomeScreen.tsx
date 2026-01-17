@@ -1,8 +1,8 @@
-import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, Dimensions, RefreshControl } from 'react-native';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Config } from '../constants/Config';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Heart } from 'lucide-react-native';
+import { Heart, SearchX } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -12,8 +12,8 @@ const ITEM_WIDTH = (width - 48) / 2;
 export default function HomeScreen({ navigation }: any) {
     const [temples, setTemples] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [networkStatus, setNetworkStatus] = useState<string>('Checking...');
     const [favorites, setFavorites] = useState<string[]>([]); // Array of IDs
 
     useEffect(() => {
@@ -57,41 +57,30 @@ export default function HomeScreen({ navigation }: any) {
         }
     };
 
-    // Test Connection independently
-    const checkConnection = async () => {
-        try {
-            setNetworkStatus('Pinging Server...');
-            const res = await fetch(`${Config.IMAGE_BASE_URL}/`, { method: 'GET' });
-            if (res.ok) {
-                const text = await res.text();
-                setNetworkStatus(`Server Online: ${text}`);
-            } else {
-                setNetworkStatus(`Server Error: ${res.status}`);
-            }
-        } catch (e: any) {
-            setNetworkStatus(`Network Error: ${e.message}`);
-        }
-    };
+    const fetchTemples = async (isRefresh = false) => {
+        if (isRefresh) setRefreshing(true);
+        else setLoading(true);
 
-    const fetchTemples = async () => {
-        setLoading(true);
         setError(null);
-        checkConnection(); // Run network test alongside
         try {
             console.log('Fetching:', `${Config.API_BASE_URL}/temples`);
             const res = await fetch(`${Config.API_BASE_URL}/temples`);
             if (!res.ok) throw new Error('Server returned ' + res.status);
             const data = await res.json();
             console.log('Data received:', data);
-            if (data.length === 0) setError('Connected but No Temples Found in DB');
-            else setTemples(data);
+            setTemples(data);
         } catch (error: any) {
             console.error(error);
             setError(error.message || 'Could not connect to server');
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
+
+    const onRefresh = useCallback(() => {
+        fetchTemples(true);
+    }, []);
 
     const resolveImage = (url: string) => {
         if (!url) return null;
@@ -138,13 +127,12 @@ export default function HomeScreen({ navigation }: any) {
         );
     };
 
-    if (loading) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#ea580c" /></View>;
-    if (error) return (
+    if (loading && !refreshing) return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#ea580c" /></View>;
+    if (error && !refreshing) return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
             <Text style={{ fontSize: 18, color: 'red', marginBottom: 10 }}>Connection Failed</Text>
             <Text style={{ textAlign: 'center', color: '#666', marginBottom: 20 }}>{error}</Text>
-            <Text style={{ textAlign: 'center', color: '#888', marginBottom: 20, fontSize: 12, backgroundColor: '#f0f0f0', padding: 10 }}>Debug: {networkStatus}</Text>
-            <TouchableOpacity onPress={fetchTemples} style={{ backgroundColor: '#ea580c', padding: 12, borderRadius: 8 }}>
+            <TouchableOpacity onPress={() => fetchTemples()} style={{ backgroundColor: '#ea580c', padding: 12, borderRadius: 8 }}>
                 <Text style={{ color: 'white', fontWeight: 'bold' }}>Retry Connection</Text>
             </TouchableOpacity>
         </View>
@@ -160,8 +148,17 @@ export default function HomeScreen({ navigation }: any) {
                 data={temples}
                 renderItem={renderItem}
                 numColumns={2}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-                keyExtractor={(item: any) => item.id}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100, flexGrow: 1 }}
+                keyExtractor={(item: any) => item._id || item.id}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ea580c']} tintColor="#ea580c" />
+                }
+                ListEmptyComponent={
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 100 }}>
+                        <SearchX size={64} color="#e5e7eb" />
+                        <Text style={{ color: '#9ca3af', marginTop: 16, fontSize: 16 }}>No temples found</Text>
+                    </View>
+                }
             />
         </View>
     );

@@ -9,7 +9,7 @@ import FavoritesScreen from '../screens/FavoritesScreen';
 import PanchangScreen from '../screens/PanchangScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import SettingsDetailScreen from '../screens/SettingsDetailScreen';
-import { Home, Calendar, Settings, Heart } from 'lucide-react-native';
+import { House, Calendar, Settings, Heart } from 'lucide-react-native';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -26,7 +26,7 @@ function TabNavigator() {
             <Tab.Screen
                 name="HomeTab"
                 component={HomeScreen}
-                options={{ title: 'Home', tabBarIcon: ({ color }) => <Home color={color} size={24} /> }}
+                options={{ title: 'Home', tabBarIcon: ({ color }) => <House color={color} size={24} /> }}
             />
             <Tab.Screen
                 name="Favorites"

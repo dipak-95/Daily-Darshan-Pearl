@@ -41,13 +41,13 @@ export default function SettingsScreen({ navigation }: any) {
 
             <ScrollView contentContainerStyle={{ paddingHorizontal: 20 }}>
                 {renderItem(<Info size={24} color="#ea580c" />, 'About Us', 'Learn more about Daily Darshan',
-                    () => navigateToDetail('About Us', 'Daily Darshan is your spiritual companion, bringing live darshan from famous temples directly to your phone. Our mission is to connect devotees with divinity through technology.\n\nVersion: 1.0.0\nDeveloped by: Hubble Team')
+                    () => navigateToDetail('About Us', 'Daily Darshan is your spiritual companion, bringing live darshan from famous temples directly to your phone. Our mission is to connect devotees with divinity through technology.\n\nVersion: 1.0.0\nDeveloped by: Pearl Production Group')
                 )}
                 {renderItem(<Shield size={24} color="#ea580c" />, 'Privacy Policy', 'Data usage and protection',
                     () => navigateToDetail('Privacy Policy', 'We value your privacy. We do not collect any personal data without your consent. Currently, this app uses your internet connection strictly to fetch temple data and images.\n\nNo location tracking or background data collection is performed.')
                 )}
                 {renderItem(<MessageCircle size={24} color="#ea580c" />, 'Contact Support', 'Get help with issues',
-                    () => navigateToDetail('Contact Support', 'For any issues or feedback, please reach out to us at:\n\nEmail: support@dailydarshan.com\nPhone: +91 1234567890\n\nWe are available Mon-Fri, 9 AM - 6 PM.')
+                    () => navigateToDetail('Contact Support', 'For any issues or feedback, please reach out to us at:\n\nEmail: dailydarshan06@gmail.com\nPhone: +91 7016202159\n\nWe are available Mon-Fri, 9 AM - 6 PM.')
                 )}
                 {renderItem(<Share2 size={24} color="#ea580c" />, 'Share App', 'Share with friends and family',
                     () => navigateToDetail('Share App', 'Support functionality coming soon! In the future, you will be able to share the app link directly from here.')
@@ -58,7 +58,7 @@ export default function SettingsScreen({ navigation }: any) {
             </ScrollView>
 
             <View style={{ alignItems: 'center', padding: 20 }}>
-                <Text style={{ color: '#cbd5e1', fontSize: 12 }}>Developed by Pearl Production</Text>
+                <Text style={{ color: '#cbd5e1', fontSize: 12 }}>Developed by Pearl Production Group</Text>
             </View>
         </View>
     );

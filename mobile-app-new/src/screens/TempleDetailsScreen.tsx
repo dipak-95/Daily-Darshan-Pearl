@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     gradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 150 },
     navbar: { position: 'absolute', top: 50, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between', zIndex: 10 },
     navButton: { backgroundColor: 'rgba(0,0,0,0.3)', padding: 8, borderRadius: 20 },
-    titleContainer: { position: 'absolute', bottom: 20, left: 20, right: 20 },
+    titleContainer: { position: 'absolute', bottom: 50, left: 20, right: 20 },
     templeName: { color: 'white', fontSize: 28, fontWeight: 'bold' },
     templeNameHindi: { color: 'rgba(255,255,255,0.9)', fontSize: 18, marginBottom: 8 },
     locationRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

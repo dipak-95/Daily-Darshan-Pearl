@@ -198,6 +198,12 @@ export default function Dashboard() {
                                                 </div>
                                             </div>
                                         </div>
+                                        <button
+                                            onClick={() => navigate('/temples', { state: { edit: t, quickUpload: true } })}
+                                            className="px-3 py-1.5 border border-gray-200 text-gray-500 rounded-lg text-xs font-semibold hover:bg-gray-50 hover:text-orange-600 transition-colors"
+                                        >
+                                            Edit
+                                        </button>
                                     </div>
                                 </div>
                             ))

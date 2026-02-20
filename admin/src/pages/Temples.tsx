@@ -363,7 +363,10 @@ export default function TemplesPage() {
                                                                 <span className="bg-white/90 text-xs px-2 py-1 rounded shadow-sm font-medium">Uploaded</span>
                                                             </div>
                                                         </div>
-                                                        <button className="w-full py-1.5 text-xs text-red-500 hover:bg-red-50 rounded bg-white border border-red-100 transition-colors">Replace</button>
+                                                        <label className="block w-full py-1.5 text-xs text-center text-red-500 hover:bg-red-50 rounded bg-white border border-red-100 transition-colors cursor-pointer">
+                                                            Replace
+                                                            <input type="file" hidden accept={isVideo ? "video/*" : "image/*"} onChange={e => e.target.files?.[0] && handleContentUpload(e.target.files[0], key as keyof VideoContent)} />
+                                                        </label>
                                                     </div>
                                                 ) : (
                                                     <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50/50 cursor-pointer transition-all gap-2 group">

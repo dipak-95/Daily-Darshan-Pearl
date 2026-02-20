@@ -188,21 +188,27 @@ export default function Dashboard() {
                                 <div key={t._id || t.id} className="bg-white p-4 rounded-xl shadow-sm border border-green-100 opacity-80 hover:opacity-100 transition-all">
                                     <div className="flex justify-between items-center">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden grayscale">
+                                            <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                                                 {t.image && <img src={t.image} className="w-full h-full object-cover" />}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-800 line-through decoration-gray-400">{t.name}</h4>
-                                                <div className="flex items-center gap-1 text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full w-fit mt-1">
-                                                    <CheckCircle2 size={10} /> Done
+                                                <h4 className="font-bold text-gray-800">{t.name}</h4>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {['morningDarshan', 'eveningDarshan', 'morningAarti', 'eveningAarti']
+                                                        .filter(type => t.videos?.[new Date().toISOString().slice(0, 10)]?.[type])
+                                                        .map(type => (
+                                                            <div key={type} className="w-2 h-2 rounded-full bg-green-500" title={type}></div>
+                                                        ))
+                                                    }
+                                                    <span className="text-[10px] text-green-600 font-medium">Uploaded</span>
                                                 </div>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => navigate('/temples', { state: { edit: t, quickUpload: true } })}
-                                            className="px-3 py-1.5 border border-gray-200 text-gray-500 rounded-lg text-xs font-semibold hover:bg-gray-50 hover:text-orange-600 transition-colors"
+                                            className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-100 transition-colors border border-orange-100"
                                         >
-                                            Edit
+                                            Change Media
                                         </button>
                                     </div>
                                 </div>

@@ -50,6 +50,7 @@ export default function TemplesPage() {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [showFullDetails, setShowFullDetails] = useState(false);
 
     useEffect(() => {
         fetchTemples();
@@ -253,13 +254,21 @@ export default function TemplesPage() {
                             <Loader2 className="animate-spin" size={16} /> Uploading {uploadProgress}%
                         </div>
                     )}
+                    {isQuickUpload && (
+                        <button
+                            onClick={() => setShowFullDetails(!showFullDetails)}
+                            className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors border border-gray-200"
+                        >
+                            {showFullDetails ? "Hide Temple Info" : "Edit Temple Info"}
+                        </button>
+                    )}
                 </div>
 
                 <div className="p-6 md:p-8 space-y-8">
-                    {/* Basic Info - HIDDEN in Quick Upload */}
-                    {!isQuickUpload && (
+                    {/* Basic Info - Hidden in Quick Upload by default */}
+                    {(!isQuickUpload || showFullDetails) && (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="space-y-4">
                                     <h3 className="font-semibold text-gray-900 flex items-center gap-2"><span className="w-1 h-6 bg-orange-500 rounded-full"></span>English Details</h3>
                                     <input placeholder="Temple Name" className="w-full p-3 bg-gray-50 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-100 outline-none transition-all" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} />
